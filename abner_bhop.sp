@@ -1,169 +1,101 @@
 #include <sourcemod>
 #include <sdktools>
-#pragma semicolon 1
+#include <sdkhooks>
 
-#define PLUGIN_VERSION "1.5"
+#pragma newdecls required // 2015 rules 
+#define PLUGIN_VERSION "2.0"
 
-new Handle:hBhop;
-new bool:BhopEnabled;
+Handle hBhop;
+Handle hAutoBhop;
+bool CSGO;
+int WATER_LIMIT;
 
-new Handle:hAutoBhop;
-new bool:AutoBhopEnabled;
-
-new bool:CSS = false;
-new bool:CSGO = false;
-
-#define WATER_LEVEL_FEET_IN_WATER   1
-
-public Plugin:myinfo =
+public Plugin myinfo =
 {
 	name = "[CSS/CS:GO] AbNeR Bunny Hoping",
 	author = "AbNeR_CSS",
-	description = "Plugin to bunny in css or csgo",
+	description = "Auto BHOP",
 	version = PLUGIN_VERSION,
 	url = "www.tecnohardclan.com"
 }
 
-stock Client_GetWaterLevel(client){
- 
-  return GetEntProp(client, Prop_Send, "m_nWaterLevel");
-}
-
-public OnPluginStart()
+public void OnPluginStart()
 {       
 	AutoExecConfig(true, "abnerbhop");
 	CreateConVar("abnerbhop_version", PLUGIN_VERSION, "Bhop Version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED);
-	hBhop = CreateConVar("abner_bhop", "1", "Enable/disable the bunny hopping");
-	hAutoBhop = CreateConVar("abner_autobhop", "1", "Enable/Disable the auto bunny hopping");
-	
-	HookConVarChange(hBhop, BhopChange);
-	HookConVarChange(hAutoBhop, AutoBhopChange);
-
-	BhopEnabled = GetConVarBool(hBhop);
-	AutoBhopEnabled = GetConVarBool(hAutoBhop);
+	hBhop = CreateConVar("abner_bhop", "1", "Enable/disable Plugin", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED);
+	hAutoBhop = CreateConVar("abner_autobhop", "1", "Enable/Disable AutoBhop", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED);
  
-	decl String:theFolder[40];
+	char theFolder[40];
 	GetGameFolderName(theFolder, sizeof(theFolder));
-	if(StrEqual(theFolder, "cstrike"))
-	{
-		CSS = true;
-		CSGO = false;
-	}
-	else if(StrEqual(theFolder, "csgo"))
-	{
-		CSS = false;
-		CSGO = true;
-	}
-	
-	if (BhopEnabled)
-	{
-		BhopOn();
-	}
-	else
-	{
-		BhopOff();
-	}
-
+	CSGO = StrEqual(theFolder, "csgo");
+	(CSGO) ? (WATER_LIMIT = 2) : (WATER_LIMIT = 1);
+		
+	if(GetConVarInt(hBhop) == 1) BhopOn();
 }
 
-BhopOff()
+public void OnClientPutInServer(int client)
 {
-	if(CSS)
-	{
-		SetCvar("sv_enablebunnyhopping", "0");
-		SetCvar("sv_airaccelerate", "10");
-		BhopEnabled = GetConVarBool(hBhop);
-		PrintToServer("Bunny Hopping OFF");
-	}
+	if(!CSGO) // To boost in CSGO use together https://forums.alliedmods.net/showthread.php?t=244387
+		SDKHook(client, SDKHook_PreThink, PreThink); //This make you fly in CSS;
+}
 
-	else if(CSGO)
+public Action PreThink(int client)
+{
+	if(IsValidClient(client) && IsPlayerAlive(client) && GetConVarInt(hBhop) == 1)
 	{
-		SetCvar("sv_enablebunnyhopping", "0"); 
-		SetCvar("sv_staminamax", "80");
-		SetCvar("sv_airaccelerate", "10");
-		SetCvar("sv_staminajumpcost", ".1");
-		SetCvar("sv_staminalandcost", ".1");
-		BhopEnabled = GetConVarBool(hBhop);
-		PrintToServer("Bunny Hopping OFF");
+		SetEntPropFloat(client, Prop_Send, "m_flStamina", 0.0); 
 	}
 }
 
-BhopOn()
+void BhopOn()
 {
-	if(CSS)
+	if(!CSGO)
 	{
 		SetCvar("sv_enablebunnyhopping", "1");
 		SetCvar("sv_airaccelerate", "2000");
-		BhopEnabled = GetConVarBool(hBhop);
-		PrintToServer("Bunny Hopping ON");
 	}
-
-	else if(CSGO)
+	else 
 	{
 		SetCvar("sv_enablebunnyhopping", "1"); 
 		SetCvar("sv_staminamax", "0");
 		SetCvar("sv_airaccelerate", "2000");
 		SetCvar("sv_staminajumpcost", "0");
 		SetCvar("sv_staminalandcost", "0");
-		BhopEnabled = GetConVarBool(hBhop);
-		PrintToServer("Bunny Hopping ON");
 	}
 }
 
 
-stock SetCvar(String:scvar[], String:svalue[])
+stock void SetCvar(char[] scvar, char[] svalue)
 {
-	new Handle:cvar = FindConVar(scvar);
+	Handle cvar = FindConVar(scvar);
 	SetConVarString(cvar, svalue, true);
 }
 
 
-public BhopChange(Handle:cvar, const String:oldVal[], const String:newVal[])
-{       
-	if (StringToInt(oldVal) == 1 && StringToInt(newVal) == 0)
-	{
-		BhopOff();
-	}
-
-	if (StringToInt(oldVal) == 0 && StringToInt(newVal) == 1)
-	{
-		BhopOn();
-	}
-}
-
-public AutoBhopChange(Handle:cvar, const String:oldVal[], const String:newVal[])
-{    
-	AutoBhopEnabled = GetConVarBool(hAutoBhop);
-}
-
-public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {
-	new index = GetEntProp(client, Prop_Data, "m_nWaterLevel");
-	new water = EntIndexToEntRef(index);
-	if (water != INVALID_ENT_REFERENCE)
-	{
-		if (IsPlayerAlive(client))
-		{
-			if (buttons & IN_JUMP)
-			{
-				if (!(Client_GetWaterLevel(client) > WATER_LEVEL_FEET_IN_WATER))
-				{
-					if (!(GetEntityMoveType(client) & MOVETYPE_LADDER))
-					{
-						SetEntPropFloat(client, Prop_Send, "m_flStamina", 0.0);
-						if (!(GetEntityFlags(client) & FL_ONGROUND))
-						{
-							if(BhopEnabled && AutoBhopEnabled)
-							{
-								buttons &= ~IN_JUMP;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	if(GetConVarInt(hBhop) == 1 && GetConVarInt(hAutoBhop) == 1) //Check if plugin and autobhop is enabled
+		if (IsPlayerAlive(client) && buttons & IN_JUMP) //Check if player is alive and is in pressing space
+			if(!(GetEntityMoveType(client) & MOVETYPE_LADDER) && !(GetEntityFlags(client) & FL_ONGROUND)) //Check if is not in ladder and is in air
+				if(waterCheck(client) < WATER_LIMIT)
+					buttons &= ~IN_JUMP; 
 	return Plugin_Continue;
+}
+
+int waterCheck(int client)
+{
+	int index = GetEntProp(client, Prop_Data, "m_nWaterLevel");
+	//PrintToChatAll("%d", index); Debug :D
+	return index;
+}
+
+stock bool IsValidClient(int client)
+{
+	if(client <= 0 ) return false;
+	if(client > MaxClients) return false;
+	if(!IsClientConnected(client)) return false;
+	return IsClientInGame(client);
 }
 
 
