@@ -3,9 +3,9 @@
 #include <sdkhooks>
 
 #pragma newdecls required 
-#define BHOPCHECK g_Bhop[client] || GetConVarBool(hAutoBhop)
+#define BHOPCHECK g_Bhop[client] || (!CSGO && GetConVarBool(hAutoBhop))
 #define PLUGIN_ENABLED GetConVarBool(hBhop)
-#define PLUGIN_VERSION "3.0"
+#define PLUGIN_VERSION "3.1"
 #define RESTOREDEFAULT GetConVarBool(hRestoreDefault)
 
 
@@ -67,6 +67,7 @@ public void OnPluginStart()
 		BhopOn();
 
 	HookConVarChange(hBhop, PluginChanged);
+	HookConVarChange(hAutoBhop, AutoBhopChanged);
 		
 	for(int i  = 1;i <= MaxClients;i++)
 	{
@@ -96,6 +97,12 @@ public void OnConfigsExecuted(){
 }
 
 
+public void AutoBhopChanged(ConVar convar, const char[] oldValue, const char[] newValue){
+	if(!CSGO)
+		return;
+
+	SetCvar("sv_autobunnyhopping", newValue);
+}
 
 public void PluginChanged(ConVar convar, const char[] oldValue, const char[] newValue){
 	if(StringToInt(newValue) == 1) BhopOn();
@@ -204,6 +211,7 @@ void BhopOn()
 	if(CSGO)
 	{
 		SetCvar("sv_enablebunnyhopping", "1"); 
+		SetCvar("sv_autobunnyhopping", "1"); 
 		SetCvar("sv_staminamax", "0");
 		SetCvar("sv_airaccelerate", "2000");
 		SetCvar("sv_staminajumpcost", "0");
@@ -235,14 +243,21 @@ void BhopOff()
 }
 
 stock void SetCvarByCvar(ConVar cvar, const char[] sValue){
+	if(cvar == INVALID_HANDLE)
+		return;
+		
 	char cvarName[100];
 	cvar.GetName(cvarName, sizeof(cvarName));
+	
 	
 	ServerCommand("%s %s", cvarName, sValue);
 }
 
 stock void SetDefaultValue(char[] scvar){
 	ConVar cvar = FindConVar(scvar);
+	if(cvar == INVALID_HANDLE)
+		return;
+		
 	char szDefault[100];
 	cvar.GetDefault(szDefault, sizeof(szDefault));
 	#if defined DEBUG
@@ -253,9 +268,12 @@ stock void SetDefaultValue(char[] scvar){
 }
 
 
-stock void SetCvar(char[] scvar, char[] svalue)
+stock void SetCvar(const char[] scvar, const char[] svalue)
 {
 	ConVar cvar = FindConVar(scvar);
+	if(cvar == INVALID_HANDLE)
+		return;
+		
 	#if defined DEBUG
 	PrintToServer("Definido valor: %s %s", scvar, svalue);
 	PrintToChatAll("Definido valor: %s %s", scvar, svalue);
@@ -268,7 +286,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 {
 	if(!PLUGIN_ENABLED)
 		return Plugin_Continue;
-		
+	
 	if(BHOPCHECK) 
 		if (IsPlayerAlive(client) && buttons & IN_JUMP) //Check if player is alive and is in pressing space
 			if(!(GetEntityMoveType(client) & MOVETYPE_LADDER) && !(GetEntityFlags(client) & FL_ONGROUND)) //Check if is not in ladder and is in air
