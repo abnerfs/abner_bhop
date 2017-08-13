@@ -31,16 +31,6 @@ int WATER_LIMIT;
 
 bool g_Bhop[MAXPLAYERS+1];
 
-/*
-	-Added sm_bhopplayer admin command to enable/disable bhop in a player.
-	-Added convar abner_bhop_flag to restrict auto bhop to a specific flag
-	-Added convar abner_bhop_disable_restore_default to restore default values when disable plugin
-	-Config file changed to abner_bhop.cfg 
-	-Convar names changed
-
-*/
-
-
 public Plugin myinfo =
 {
 	name = "[CSS/CS:GO] AbNeR BHOP",
