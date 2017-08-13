@@ -22,6 +22,8 @@ ConVar hRestoreDefault;
 //#define CVAR_FLAG "z"
 #define CVAR_RESTOREDEFAULT "1"
 
+#define BHOPFLAG ADMFLAG_SLAY
+
 
 
 bool CSGO = false;
@@ -53,11 +55,11 @@ public void OnPluginStart()
 {       
 	CreateConVar("abnerbhop_version", PLUGIN_VERSION, "Plugin version", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	hBhop = CreateConVar("abner_bhop_enabled", CVAR_ENABLED, "Enable/disable plugin", FCVAR_NOTIFY|FCVAR_REPLICATED);
-	hRestoreDefault = CreateConVar("abner_bhop_disable_restore_default", CVAR_RESTOREDEFAULT, "Restore default caonvar values when disable plugin", FCVAR_NOTIFY|FCVAR_REPLICATED);
+	hRestoreDefault = CreateConVar("abner_bhop_disable_restore_default", CVAR_RESTOREDEFAULT, "Restore default convar values when disable plugin", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	hAutoBhop = CreateConVar("abner_bhop_autobhop", CVAR_AUTOBHOP, "Enable/Disable auto bhop to everyone", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	hFlag = CreateConVar("abner_bhop_flag", CVAR_FLAG, "Admin flag that have autobhop enabled", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	
-	RegAdminCmd("sm_bhopplayer", CommandBhop, ADMFLAG_SLAY);
+	RegAdminCmd("sm_bhopplayer", CommandBhop, BHOPFLAG);
 	
 	char theFolder[40];
 	GetGameFolderName(theFolder, sizeof(theFolder));
