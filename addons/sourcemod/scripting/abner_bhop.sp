@@ -5,7 +5,7 @@
 #pragma newdecls required 
 #define BHOPCHECK g_Bhop[client] || (!CSGO && GetConVarBool(hAutoBhop))
 #define PLUGIN_ENABLED GetConVarBool(hBhop)
-#define PLUGIN_VERSION "3.1"
+#define PLUGIN_VERSION "3.1fix"
 #define RESTOREDEFAULT GetConVarBool(hRestoreDefault)
 
 
@@ -49,6 +49,8 @@ public void OnPluginStart()
 	hAutoBhop = CreateConVar("abner_bhop_autobhop", CVAR_AUTOBHOP, "Enable/Disable auto bhop to everyone", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	hFlag = CreateConVar("abner_bhop_flag", CVAR_FLAG, "Admin flag that have autobhop enabled", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	
+	AutoExecConfig(true, "abner_bhop");
+	
 	RegAdminCmd("sm_bhopplayer", CommandBhop, BHOPFLAG);
 	
 	char theFolder[40];
@@ -66,6 +68,7 @@ public void OnPluginStart()
 		if(IsValidClient(i))
 			OnClientPostAdminCheck(i);
 	}
+	
 }
 
 public void OnPluginEnd(){
@@ -84,8 +87,8 @@ public void OnConfigsExecuted(){
 	SetCvarByCvar(hAutoBhop, CVAR_AUTOBHOP);
 	SetCvarByCvar(hFlag, CVAR_FLAG);
 	SetCvarByCvar(hRestoreDefault, CVAR_RESTOREDEFAULT);
-	#endif
 	AutoExecConfig(true, "abner_bhop");
+	#endif
 }
 
 
