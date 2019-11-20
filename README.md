@@ -1,4 +1,7 @@
 # AbNeR BHOP
+
+![Downloads](https://img.shields.io/github/downloads/abnerfs/abner_bhop/total) ![Last commit](https://img.shields.io/github/last-commit/abnerfs/abner_bhop "Last commit") ![Open issues](https://img.shields.io/github/issues/abnerfs/abner_bhop "Open Issues") ![Closed issues](https://img.shields.io/github/issues-closed/abnerfs/abner_bhop "Closed Issues") ![Size](https://img.shields.io/github/repo-size/abnerfs/dontpad-api "Size")
+
 - This originally was a plugin to do autobhop in CSS/CS:GO, since Valve implemented sv_enablebunnyhopping in CSGO this plugin still useful to allow autobhop only to specific players. (Using abner_bhop_flag ConVar or sm_bhopplayer admin command).
 
 # Admin Commands
